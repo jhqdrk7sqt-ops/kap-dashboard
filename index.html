@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KAP Risk Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#f0f2f5;font-size:14px;color:#1a1a1a}
@@ -19,6 +20,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#f
 .kpi-label{font-size:11px;color:#666;font-weight:600;text-transform:uppercase}
 .kpi-value{font-size:28px;font-weight:bold;margin-top:4px}
 .kpi.blue .kpi-value{color:#3b82f6}.kpi.red .kpi-value{color:#ef4444}.kpi.yellow .kpi-value{color:#f59e0b}.kpi.green .kpi-value{color:#10b981}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+.chart-box{background:#fff;padding:12px;border-radius:6px;border:1px solid #e5e7eb}
+.chart-box h4{font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.chart-container{position:relative;height:220px;width:100%}
 
 /* Filters */
 .filters-box{background:#fff;padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid #e5e7eb}
@@ -75,6 +82,7 @@ tr:hover{background:#f9fafb}
 
 @media(max-width:768px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
   .filter-grid{grid-template-columns:1fr 1fr}
   table{font-size:12px}
   th, td{padding:8px}
@@ -85,7 +93,7 @@ tr:hover{background:#f9fafb}
 
 <div class="header">
   <h1>🏦 KAP Risk İzleme Dashboard</h1>
-  <p><strong>161</strong> Özel Durum Açıklaması - 17.09.2026</p>
+  <p><strong>01.09.2026 - 17.09.2026</strong> Özel Durum Açıklamaları Analizi</p>
 </div>
 
 <div class="container">
@@ -98,11 +106,23 @@ tr:hover{background:#f9fafb}
     <div class="kpi green"><div class="kpi-label">Pozitif</div><div class="kpi-value" id="pozitif">0</div></div>
   </div>
 
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h4>📈 Günlük İlan Hacmi ve Trendi</h4>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h4>🍩 ÖDA Konu Dağılımı</h4>
+      <div class="chart-container"><canvas id="topicChart"></canvas></div>
+    </div>
+  </div>
+
   <!-- Filters -->
   <div class="filters-box">
     <div class="filter-grid">
       <div class="filter-item">
-        <label>📅 Yayınlanma Tarihi</label>
+        <label>📅 Tarih</label>
         <input type="date" id="dateFilter" onchange="applyFilters()">
       </div>
       <div class="filter-item">
@@ -124,7 +144,7 @@ tr:hover{background:#f9fafb}
         </select>
       </div>
       <div class="filter-item" style="display:flex;align-items:flex-end">
-        <button class="btn" style="width:100%;background:#6b7280" onclick="resetFilters()">🔄 Filtreleri Sıfırla</button>
+        <button class="btn" style="width:100%;background:#6b7280" onclick="resetFilters()">🔄 Sıfırla</button>
       </div>
     </div>
     <div class="risk-tabs">
@@ -132,7 +152,8 @@ tr:hover{background:#f9fafb}
       <div class="risk-tab" data-risk="KRITIK" onclick="filterRisk('KRITIK')">🔴 Kritik</div>
       <div class="risk-tab" data-risk="NEGATIF" onclick="filterRisk('NEGATIF')">🟡 Dikkat</div>
       <div class="risk-tab" data-risk="NOTR" onclick="filterRisk('NOTR')">⚪ Nötr</div>
-      <div class="risk-tab" data-risk="POZITIF" onclick="filterRisk('POZITIF')">🟢 Pozitif</div</div>
+      <div class="risk-tab" data-risk="POZITIF" onclick="filterRisk('POZITIF')">🟢 Pozitif</div>
+    </div>
   </div>
 
   <!-- Table -->
@@ -145,6 +166,7 @@ tr:hover{background:#f9fafb}
       <table>
         <thead>
           <tr>
+            <th>Tarih</th>
             <th>Kod</th>
             <th>Şirket</th>
             <th>Konu</th>
@@ -172,24 +194,45 @@ tr:hover{background:#f9fafb}
 </div>
 
 <script>
-const data = [
-  {id:1,kod:'ALVES',ad:'Alves Kablo San. A.Ş.',konu:'Kayyum Atanması',ozet:'Mahkeme kararı ile kayyum atandı',sektor:'Sanayi',risk:'KRITIK',skor:0.95,tarih:'2026-09-17',aciklama:'Şirket hakkında yürütülen soruşturma kapsamında mahkemece kayyum atanmasına karar verilmiştir.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664508'},
-  {id:2,kod:'TERA',ad:'Tera Portföy Yönetimi A.Ş.',konu:'Fon Tasfiyesi',ozet:'SPK kararı ile fon tasfiye edildi',sektor:'Finans',risk:'KRITIK',skor:0.92,tarih:'2026-09-17',aciklama:'SPK kararı kapsamında bazı yatırım fonlarında temerrüt oluşmuş, tasfiye süreci başlatılmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664400'},
-  {id:3,kod:'PUSULA',ad:'Pusula Portföy A.Ş.',konu:'Temerrüt',ozet:'Yatırımcı ödemelerinde temerrüt',sektor:'Finans',risk:'KRITIK',skor:0.98,tarih:'2026-09-17',aciklama:'Bazı yatırım fonlarında ödeme güçlüğü nedeniyle temerrüt durumu oluşmuştur.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664350'},
-  {id:4,kod:'MCARD',ad:'Metropal Kurumsal Hiz. A.Ş.',konu:'Pay Geri Alım',ozet:'1.2 Milyar TL geri alım programı',sektor:'Hizmet',risk:'NEGATIF',skor:0.72,tarih:'2026-09-17',aciklama:'Yönetim Kurulu kararı ile azami 1.2 Milyar TL tutarında pay geri alım programı başlatılmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664447'},
-  {id:5,kod:'LIDFA',ad:'Lider Faktoring A.Ş.',konu:'Bono İtfası',ozet:'50 M TL bono itfa edildi',sektor:'Finans',risk:'POZITIF',skor:0.15,tarih:'2026-09-17',aciklama:'50 Milyon TL anapara tutarlı bononun itfa ödemesi başarıyla gerçekleştirilmiştir.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664484'},
-  {id:6,kod:'TRALT',ad:'Türk Altın İşletmeleri A.Ş.',konu:'Piyasa Gelişmeleri',ozet:'Piyasa dalgalanması bilgilendirmesi',sektor:'Madencilik',risk:'NOTR',skor:0.35,tarih:'2026-09-17',aciklama:'Borsa İstanbul\'da yaşanan dalgalanmalar ve pay fiyat hareketleri hakkında bilgilendirme.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664447'},
-  {id:7,kod:'DMSAS',ad:'Demirsaş Döküm A.Ş.',konu:'Rekabet Kurumu',ozet:'Rekabet Kurumu kararı',sektor:'Sanayi',risk:'NEGATIF',skor:0.75,tarih:'2026-09-17',aciklama:'Rekabet Kurumu tarafından şirket hakkında soruşturma başlatılmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1660532'},
-  {id:8,kod:'SMART',ad:'Smartiks Yazılım A.Ş.',konu:'Sözleşme',ozet:'Yeni sözleşme imzalandı',sektor:'Teknoloji',risk:'POZITIF',skor:0.20,tarih:'2026-09-17',aciklama:'Önemli bir müşteri ile yeni sözleşme imzalanmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664828'}
+// 01.09.2026 - 17.09.2026 arası gerçekçi mock veri
+const rawData = [
+  {id:1,tarih:'2026-09-17',kod:'ALVES',ad:'Alves Kablo San. A.Ş.',konu:'Kayyum Atanması',ozet:'Mahkeme kararı ile kayyum atandı',sektor:'Sanayi',risk:'KRITIK',skor:0.95,aciklama:'Şirket hakkında yürütülen soruşturma kapsamında mahkemece kayyum atanmasına karar verilmiştir.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664508'},
+  {id:2,tarih:'2026-09-17',kod:'TERA',ad:'Tera Portföy Yönetimi A.Ş.',konu:'Fon Tasfiyesi',ozet:'SPK kararı ile fon tasfiye edildi',sektor:'Finans',risk:'KRITIK',skor:0.92,aciklama:'SPK kararı kapsamında bazı yatırım fonlarında temerrüt oluşmuş, tasfiye süreci başlatılmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664400'},
+  {id:3,tarih:'2026-09-17',kod:'PUSULA',ad:'Pusula Portföy A.Ş.',konu:'Temerrüt',ozet:'Yatırımcı ödemelerinde temerrüt',sektor:'Finans',risk:'KRITIK',skor:0.98,aciklama:'Bazı yatırım fonlarında ödeme güçlüğü nedeniyle temerrüt durumu oluşmuştur.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664350'},
+  {id:4,tarih:'2026-09-17',kod:'MCARD',ad:'Metropal Kurumsal Hiz. A.Ş.',konu:'Pay Geri Alım',ozet:'1.2 Milyar TL geri alım programı',sektor:'Hizmet',risk:'NEGATIF',skor:0.72,aciklama:'Yönetim Kurulu kararı ile azami 1.2 Milyar TL tutarında pay geri alım programı başlatılmıştır.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664447'},
+  {id:5,tarih:'2026-09-17',kod:'LIDFA',ad:'Lider Faktoring A.Ş.',konu:'Bono İtfası',ozet:'50 M TL bono itfa edildi',sektor:'Finans',risk:'POZITIF',skor:0.15,aciklama:'50 Milyon TL anapara tutarlı bononun itfa ödemesi başarıyla gerçekleştirilmiştir.',kap_url:'https://www.kap.org.tr/tr/Bildirim/1664484'},
+  {id:6,tarih:'2026-09-16',kod:'TRALT',ad:'Türk Altın İşletmeleri A.Ş.',konu:'Piyasa Gelişmeleri',ozet:'Piyasa dalgalanması bilgilendirmesi',sektor:'Madencilik',risk:'NOTR',skor:0.35,aciklama:'Borsa İstanbul\'da yaşanan dalgalanmalar hakkında bilgilendirme.',kap_url:'#'},
+  {id:7,tarih:'2026-09-16',kod:'DMSAS',ad:'Demirsaş Döküm A.Ş.',konu:'Rekabet Kurumu',ozet:'Rekabet Kurumu kararı',sektor:'Sanayi',risk:'NEGATIF',skor:0.75,aciklama:'Rekabet Kurumu tarafından şirket hakkında soruşturma başlatılmıştır.',kap_url:'#'},
+  {id:8,tarih:'2026-09-15',kod:'SMART',ad:'Smartiks Yazılım A.Ş.',konu:'Sözleşme',ozet:'Yeni sözleşme imzalandı',sektor:'Teknoloji',risk:'POZITIF',skor:0.20,aciklama:'Önemli bir müşteri ile yeni sözleşme imzalanmıştır.',kap_url:'#'},
+  {id:9,tarih:'2026-09-15',kod:'INFO',ad:'İnfo Yatırım A.Ş.',konu:'Yönetici Değişikliği',ozet:'Genel Müdür istifa etti',sektor:'Finans',risk:'NEGATIF',skor:0.65,aciklama:'Şirket Genel Müdürü görevinden istifa etmiştir.',kap_url:'#'},
+  {id:10,tarih:'2026-09-14',kod:'BJKAS',ad:'Beşiktaş Futbol A.Ş.',konu:'Sözleşme',ozet:'Sponsorluk anlaşması',sektor:'Hizmet',risk:'POZITIF',skor:0.25,aciklama:'Yeni ana sponsorluk anlaşması imzalanmıştır.',kap_url:'#'},
+  {id:11,tarih:'2026-09-14',kod:'SARE',ad:'Şa-Ra Enerji A.Ş.',konu:'Borçlanma',ozet:'Yeni kredi sözleşmesi',sektor:'Enerji',risk:'NEGATIF',skor:0.70,aciklama:'Banka ile yeni kredi sözleşmesi imzalanmıştır.',kap_url:'#'},
+  {id:12,tarih:'2026-09-13',kod:'UCAYM',ad:'Üçay Mühendislik A.Ş.',konu:'Teminat',ozet:'Teminat değişikliği',sektor:'İnşaat',risk:'NEGATIF',skor:0.60,aciklama:'Mevcut teminat yapısında değişiklik yapılmıştır.',kap_url:'#'},
+  {id:13,tarih:'2026-09-12',kod:'GLRYH',ad:'Güler Yatırım Holding A.Ş.',konu:'Rekabet Kurumu',ozet:'SPK yaptırım kararı',sektor:'Finans',risk:'KRITIK',skor:0.88,aciklama:'SPK Kurulu kararı kapsamında şirket hakkında yaptırım uygulanmıştır.',kap_url:'#'},
+  {id:14,tarih:'2026-09-11',kod:'GRNYO',ad:'Garanti Yatırım Ortaklığı A.Ş.',konu:'Bono İtfası',ozet:'NAD 2 katını aştı',sektor:'Finans',risk:'POZITIF',skor:0.18,aciklama:'Pay başına net aktif değer 2 katını aşmıştır.',kap_url:'#'},
+  {id:15,tarih:'2026-09-10',kod:'CVKMD',ad:'CVK Madencilik A.Ş.',konu:'Pay Geri Alım',ozet:'Pay alım bildirimi',sektor:'Madencilik',risk:'NEGATIF',skor:0.68,aciklama:'Yönetim kurulu üyesi pay alımı gerçekleştirmiştir.',kap_url:'#'},
+  {id:16,tarih:'2026-09-09',kod:'CMENT',ad:'Çimento Sanayi A.Ş.',konu:'Sözleşme',ozet:'İhale kazanıldı',sektor:'Sanayi',risk:'POZITIF',skor:0.22,aciklama:'Önemli bir altyapı ihalesi kazanılmıştır.',kap_url:'#'},
+  {id:17,tarih:'2026-09-08',kod:'HEDEF',ad:'Hedef Portföy A.Ş.',konu:'Fon Tasfiyesi',ozet:'Fon tasfiye süreci',sektor:'Finans',risk:'KRITIK',skor:0.91,aciklama:'SPK kararı ile fon tasfiye edilmiştir.',kap_url:'#'},
+  {id:18,tarih:'2026-09-07',kod:'ALBMD',ad:'Albaraka Menkul A.Ş.',konu:'Temerrüt',ozet:'Ödeme güçlüğü',sektor:'Finans',risk:'KRITIK',skor:0.94,aciklama:'Bazı yükümlülüklerde ödeme güçlüğü yaşanmaktadır.',kap_url:'#'},
+  {id:19,tarih:'2026-09-06',kod:'TEHOL',ad:'Tekfen Holding A.Ş.',konu:'Sözleşme',ozet:'Yeni ihale',sektor:'İnşaat',risk:'POZITIF',skor:0.20,aciklama:'Yurtdışında yeni bir proje ihalesi kazanılmıştır.',kap_url:'#'},
+  {id:20,tarih:'2026-09-05',kod:'PRZMA',ad:'Prizma Fon A.Ş.',konu:'Yönetici Değişikliği',ozet:'Bağımsız denetçi değişimi',sektor:'Finans',risk:'NOTR',skor:0.30,aciklama:'Bağımsız denetim kuruluşu değiştirilmiştir.',kap_url:'#'},
+  {id:21,tarih:'2026-09-04',kod:'MANAS',ad:'Manas Enerji A.Ş.',konu:'Sözleşme',ozet:'Yeni yatırım',sektor:'Enerji',risk:'POZITIF',skor:0.25,aciklama:'Yeni rüzgar enerjisi santrali yatırımı onaylandı.',kap_url:'#'},
+  {id:22,tarih:'2026-09-03',kod:'PEKGY',ad:'Peksoy Gayrimenkul A.Ş.',konu:'Bono İtfası',ozet:'Gayrimenkul satışı',sektor:'İnşaat',risk:'POZITIF',skor:0.15,aciklama:'Portföydeki bir gayrimenkul elden çıkarılmıştır.',kap_url:'#'},
+  {id:23,tarih:'2026-09-02',kod:'KTLEV',ad:'Kartallar Levha A.Ş.',konu:'Sözleşme',ozet:'Kapasite artışı',sektor:'Sanayi',risk:'POZITIF',skor:0.20,aciklama:'Üretim hattı genişletme yatırımı tamamlandı.',kap_url:'#'},
+  {id:24,tarih:'2026-09-01',kod:'PSD',ad:'Pusula Serbest Fon',konu:'Temerrüt',ozet:'Likidite sorunu',sektor:'Finans',risk:'KRITIK',skor:0.96,aciklama:'Fon katılma payı iade taleplerinde gecikme yaşanmaktadır.',kap_url:'#'},
+  {id:25,tarih:'2026-09-01',kod:'SKP',ad:'Tera Para Piyasası Fonu',konu:'Fon Tasfiyesi',ozet:'Tasfiye kararı',sektor:'Finans',risk:'KRITIK',skor:0.93,aciklama:'Fonun tasfiyesine karar verilmiştir.',kap_url:'#'}
 ];
 
-let filtered = [...data];
+let filtered = [...rawData];
 let currentRisk = '';
+let trendChartInstance = null;
+let topicChartInstance = null;
 
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = filtered.map(n => `
     <tr>
+      <td style="font-size:12px;color:#666">${n.tarih.split('-').reverse().join('.')}</td>
       <td style="font-weight:700;color:#1e3a8a">${n.kod}</td>
       <td>${n.ad}</td>
       <td>${n.konu}</td>
@@ -204,6 +247,78 @@ function render() {
   document.getElementById('kritik').textContent = filtered.filter(n => n.risk === 'KRITIK').length;
   document.getElementById('negatif').textContent = filtered.filter(n => n.risk === 'NEGATIF').length;
   document.getElementById('pozitif').textContent = filtered.filter(n => n.risk === 'POZITIF').length;
+  
+  updateCharts();
+}
+
+function updateCharts() {
+  // 1. Günlük Trend Verisi Hazırla
+  const dateCounts = {};
+  filtered.forEach(n => {
+    dateCounts[n.tarih] = (dateCounts[n.tarih] || 0) + 1;
+  });
+  const sortedDates = Object.keys(dateCounts).sort();
+  const dateLabels = sortedDates.map(d => d.split('-').reverse().join('.'));
+  const dateData = sortedDates.map(d => dateCounts[d]);
+
+  // 2. Konu Dağılım Verisi Hazırla
+  const topicCounts = {};
+  filtered.forEach(n => {
+    topicCounts[n.konu] = (topicCounts[n.konu] || 0) + 1;
+  });
+  const topicLabels = Object.keys(topicCounts);
+  const topicData = Object.values(topicCounts);
+
+  // 3. Trend Chart Render
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  if (trendChartInstance) trendChartInstance.destroy();
+  
+  trendChartInstance = new Chart(trendCtx, {
+    type: 'bar',
+    data: {
+      labels: dateLabels,
+      datasets: [{
+        label: 'Günlük ÖDA Sayısı',
+        data: dateData,
+        backgroundColor: '#3b82f6',
+        borderRadius: 4,
+        barThickness: 20
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } },
+        x: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 4. Konu Dağılım Chart Render
+  const topicCtx = document.getElementById('topicChart').getContext('2d');
+  if (topicChartInstance) topicChartInstance.destroy();
+
+  topicChartInstance = new Chart(topicCtx, {
+    type: 'doughnut',
+    data: {
+      labels: topicLabels,
+      datasets: [{
+        data: topicData,
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#6b7280'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12 } }
+      },
+      cutout: '65%'
+    }
+  });
 }
 
 function filterRisk(risk) {
@@ -218,7 +333,7 @@ function applyFilters() {
   const stockVal = document.getElementById('stockFilter').value.toLowerCase();
   const subjectVal = document.getElementById('subjectFilter').value;
 
-  filtered = data.filter(n => {
+  filtered = rawData.filter(n => {
     const matchRisk = currentRisk === '' || n.risk === currentRisk;
     const matchDate = dateVal === '' || n.tarih === dateVal;
     const matchStock = stockVal === '' || n.kod.toLowerCase().includes(stockVal) || n.ad.toLowerCase().includes(stockVal);
@@ -236,7 +351,7 @@ function resetFilters() {
 }
 
 function showDetail(id) {
-  const n = data.find(x => x.id === id);
+  const n = rawData.find(x => x.id === id);
   if (!n) return;
 
   document.getElementById('modalBody').innerHTML = `
@@ -245,10 +360,10 @@ function showDetail(id) {
     </div>
     <div class="section">
       <h4>🏢 Firma Bilgileri</h4>
+      <div class="row"><span class="row-label">Tarih:</span><span class="row-value">${n.tarih.split('-').reverse().join('.')}</span></div>
       <div class="row"><span class="row-label">Hisse Kodu:</span><span class="row-value">${n.kod}</span></div>
       <div class="row"><span class="row-label">Şirket Adı:</span><span class="row-value">${n.ad}</span></div>
       <div class="row"><span class="row-label">Sektör:</span><span class="row-value">${n.sektor}</span></div>
-      <div class="row"><span class="row-label">Tarih:</span><span class="row-value">${n.tarih}</span></div>
     </div>
     <div class="section">
       <h4>📋 KAP Bildirimi</h4>
