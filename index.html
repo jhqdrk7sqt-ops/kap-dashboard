@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAP Risk Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#f0f2f5;font-size:14px}
+.header{background:#fff;padding:12px 16px;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:100}
+.header h1{font-size:18px;color:#1a1a1a}
+.header p{font-size:12px;color:#666;margin-top:2px}
+.container{padding:12px;max-width:1400px;margin:0 auto}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab{padding:8px 16px;background:#fff;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+.tab.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:#fff;padding:12px;border-radius:6px;border-left:4px solid}
+.kpi.blue{border-color:#3b82f6}
+.kpi.red{border-color:#ef4444}
+.kpi.yellow{border-color:#f59e0b}
+.kpi.green{border-color:#10b981}
+.kpi-label{font-size:11px;color:#666;font-weight:600;text-transform:uppercase}
+.kpi-value{font-size:28px;font-weight:bold;margin-top:4px}
+.kpi.blue .kpi-value{color:#3b82f6}
+.kpi.red .kpi-value{color:#ef4444}
+.kpi.yellow .kpi-value{color:#f59e0b}
+.kpi.green .kpi-value{color:#10b981}
+.table-wrap{background:#fff;border-radius:6px;overflow:hidden}
+.table-header{padding:12px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+.table-header h3{font-size:15px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{background:#f9fafb;padding:10px;text-align:left;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;border-bottom:1px solid #ddd}
+td{padding:10px;border-bottom:1px solid #eee;font-size:13px}
+tr:hover{background:#f9fafb}
+.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-krilik{background:#fee;color:#c00}
+.badge-negatif{background:#fef3c7;color:#b45309}
+.badge-notr{background:#f3f4f6;color:#666}
+.badge-pozitif{background:#d1fae5;color:#047857}
+.btn{padding:6px 12px;background:#3b82f6;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.btn:hover{background:#2563eb}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;padding:20px}
+.modal.active{display:flex;align-items:center;justify-content:center}
+.modal-box{background:#fff;border-radius:8px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-head{padding:16px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff}
+.modal-head h2{font-size:18px;font-weight:700}
+.modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:#666}
+.modal-body{padding:16px}
+.section{background:#f9fafb;padding:12px;border-radius:6px;margin-bottom:12px}
+.section h4{font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a1a}
+.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee}
+.row:last-child{border-bottom:none}
+.row-label{font-size:12px;color:#666}
+.row-value{font-size:12px;font-weight:600;color:#1a1a1a}
+.bar{width:100%;height:6px;background:#e5e7eb;border-radius:3px;margin-top:6px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(to right,#10b981,#f59e0b,#ef4444)}
+.actions{list-style:none}
+.actions li{padding:8px;background:#fff;border-radius:4px;margin-bottom:6px;font-size:12px;color:#4b5563;border:1px solid #e5e7eb}
+@media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr)}.tabs{gap:4px}.tab{padding:6px 12px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>🏦 KAP Risk İzleme Dashboard</h1>
+<p><strong>161</strong> Özel Durum Açıklaması - 17.09.2026 (En kritik 30'u gösteriliyor)</p>
+</div>
+
+<div class="container">
+
+<div class="kpi-row">
+<div class="kpi blue"><div class="kpi-label">Toplam ÖDA</div><div class="kpi-value">161</div></div>
+<div class="kpi red"><div class="kpi-label">Kritik</div><div class="kpi-value" id="kritik">0</div></div>
+<div class="kpi yellow"><div class="kpi-label">Dikkat</div><div class="kpi-value" id="negatif">0</div></div>
+<div class="kpi green"><div class="kpi-label">Pozitif</div><div class="kpi-value" id="pozitif">0</div></div>
+</div>
+
+<div class="tabs">
+<div class="tab active" onclick="filter('')">Tümü</div>
+<div class="tab" onclick="filter('KRITIK')">🔴 Kritik</div>
+<div class="tab" onclick="filter('NEGATIF')">🟡 Dikkat</div>
+<div class="tab" onclick="filter('NOTR')">⚪ Nötr</div>
+<div class="tab" onclick="filter('POZITIF')">🟢 Pozitif</div>
+</div>
+
+<div class="table-wrap">
+<div class="table-header">
+<h3>📋 Özel Durum Açıklamaları</h3>
+<span id="count" style="font-size:12px;color:#666">30 bildirim</span>
+</div>
+<table>
+<thead>
+<tr>
+<th>Kod</th>
+<th>Şirket</th>
+<th>Konu</th>
+<th>Özet</th>
+<th>Sektör</th>
+<th>Risk</th>
+<th>İşlem</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-box">
+<div class="modal-head">
+<h2>📊 Firma Detay Raporu</h2>
+<button class="modal-close" onclick="closeModal()">×</button>
+</div>
+<div class="modal-body" id="modalBody"></div>
+</div>
+</div>
+
+<script>
+const data=[
+{id:1,kod:'ALVES',ad:'Alves Kablo San. A.Ş.',konu:'Kayyum Atanması',ozet:'Mahkeme kararı ile kayyum atandı',sektor:'Sanayi',risk:'KRITIK',skor:0.95,aciklama:'Şirket hakkında yürütülen soruşturma kapsamında mahkemece kayyum atanmasına karar verilmiştir.'},
+{id:2,kod:'TERA',ad:'Tera Portföy Yönetimi A.Ş.',konu:'Fon Tasfiyesi',ozet:'SPK kararı ile fon tasfiye edildi',sektor:'Finans',risk:'KRITIK',skor:0.92,aciklama:'SPK kararı kapsamında bazı yatırım fonlarında temerrüt oluşmuş, tasfiye süreci başlatılmıştır.'},
+{id:3,kod:'PUSULA',ad:'Pusula Portföy A.Ş.',konu:'Temerrüt',ozet:'Yatırımcı ödemelerinde temerrüt',sektor:'Finans',risk:'KRITIK',skor:0.98,aciklama:'Bazı yatırım fonlarında ödeme güçlüğü nedeniyle temerrüt durumu oluşmuştur.'},
+{id:4,kod:'INFO',ad:'İnfo Yatırım A.Ş.',konu:'Gözaltı',ozet:'Yönetici gözaltına alındı',sektor:'Finans',risk:'KRITIK',skor:0.90,aciklama:'Şirket yöneticisi hakkında yürütülen soruşturma kapsamında gözaltı kararı uygulanmıştır.'},
+{id:5,kod:'MCARD',ad:'Metropal Kurumsal Hiz. A.Ş.',konu:'Pay Geri Alım',ozet:'1.2 Milyar TL geri alım programı',sektor:'Hizmet',risk:'NEGATIF',skor:0.72,aciklama:'Yönetim Kurulu kararı ile azami 1.2 Milyar TL tutarında pay geri alım programı başlatılmıştır.'},
+{id:6,kod:'SRVGY',ad:'Servet Gayrimenkul YO A.Ş.',konu:'Yönetici Değişikliği',ozet:'Yatırımcı İlişkileri Müdürü istifa',sektor:'İnşaat',risk:'NEGATIF',skor:0.65,aciklama:'Yatırımcı İlişkileri Bölümü Yöneticisi görevinden ayrılmıştır.'},
+{id:7,kod:'GLRYH',ad:'Güler Yatırım Holding A.Ş.',konu:'SPK Kararı',ozet:'SPK yaptırım kararı',sektor:'Finans',risk:'NEGATIF',skor:0.78,aciklama:'SPK Kurulu kararı kapsamında şirket hakkında yaptırım uygulanmıştır.'},
+{id:8,kod:'BJKAS',ad:'Beşiktaş Futbol A.Ş.',konu:'Sponsorluk',ozet:'Sponsor sözleşmesi feshedildi',sektor:'Hizmet',risk:'NEGATIF',skor:0.68,aciklama:'Ana sponsor ile olan sözleşme karşılıklı olarak feshedilmiştir.'},
+{id:9,kod:'SARE',ad:'Şa-Ra Enerji A.Ş.',konu:'Borçlanma',ozet:'Yeni kredi sözleşmesi',sektor:'Enerji',risk:'NEGATIF',skor:0.70,aciklama:'Banka ile yeni kredi sözleşmesi imzalanmıştır.'},
+{id:10,kod:'UCAYM',ad:'Üçay Mühendislik A.Ş.',konu:'Teminat',ozet:'Teminat değişikliği',sektor:'İnşaat',risk:'NEGATIF',skor:0.60,aciklama:'Mevcut teminat yapısında değişiklik yapılmıştır.'},
+{id:11,kod:'LIDFA',ad:'Lider Faktoring A.Ş.',konu:'Bono İtfası',ozet:'50 M TL bono itfa edildi',sektor:'Finans',risk:'POZITIF',skor:0.15,aciklama:'50 Milyon TL anapara tutarlı bononun itfa ödemesi başarıyla gerçekleştirilmiştir.'},
+{id:12,kod:'TRALT',ad:'Türk Altın İşletmeleri A.Ş.',konu:'Piyasa Gelişmeleri',ozet:'Piyasa dalgalanması bilgilendirmesi',sektor:'Madencilik',risk:'NOTR',skor:0.35,aciklama:'Borsa İstanbul\'da yaşanan dalgalanmalar ve pay fiyat hareketleri hakkında bilgilendirme.'},
+{id:13,kod:'SMART',ad:'Smartiks Yazılım A.Ş.',konu:'Sözleşme',ozet:'Yeni sözleşme imzalandı',sektor:'Teknoloji',risk:'POZITIF',skor:0.20,aciklama:'Önemli bir müşteri ile yeni sözleşme imzalanmıştır.'},
+{id:14,kod:'PAPIL',ad:'Papilon Savunma Tek. A.Ş.',konu:'Genel Müdür',ozet:'Genel Müdür değişikliği',sektor:'Teknoloji',risk:'NOTR',skor:0.40,aciklama:'Şirket Genel Müdürü görevinden ayrılmış, yeni atama yapılmıştır.'},
+{id:15,kod:'GRNYO',ad:'Garanti Yatırım Ortaklığı A.Ş.',konu:'Net Aktif Değer',ozet:'NAD 2 katını aştı',sektor:'Finans',risk:'POZITIF',skor:0.25,aciklama:'Pay başına net aktif değer 2 katını aşmıştır.'},
+{id:16,kod:'CVKMD',ad:'CVK Madencilik A.Ş.',konu:'Pay Alım Satım',ozet:'Pay alım bildirimi',sektor:'Madencilik',risk:'NOTR',skor:0.30,aciklama:'Önemli pay alım satım işlemi gerçekleştirilmiştir.'},
+{id:17,kod:'DMSAS',ad:'Demirsaş Döküm A.Ş.',konu:'Rekabet Kurumu',ozet:'Rekabet Kurumu kararı',sektor:'Sanayi',risk:'NEGATIF',skor:0.75,aciklama:'Rekabet Kurumu tarafından şirket hakkında soruşturma başlatılmıştır.'},
+{id:18,kod:'GOODY',ad:'Goodyear Lastikleri A.Ş.',konu:'Rekabet Kararı',ozet:'Rekabet Kurumu kararı açıklandı',sektor:'Sanayi',risk:'NEGATIF',skor:0.72,aciklama:'Rekabet Kurumu kararı kamuya duyurulmuştur.'},
+{id:19,kod:'CMENT',ad:'Çimento Sanayi A.Ş.',konu:'Bedelsiz Sermaye',ozet:'%1300 bedelsiz sermaye artırımı',sektor:'Sanayi',risk:'POZITIF',skor:0.18,aciklama:'Bedelsiz sermaye artırımı kararı alınmıştır.'},
+{id:20,kod:'HEDEF',ad:'Hedef Portföy A.Ş.',konu:'Fon Bildirimi',ozet:'Fon portföy dağılımı',sektor:'Finans',risk:'NOTR',skor:0.35,aciklama:'Fon portföy dağılım raporu yayınlanmıştır.'},
+{id:21,kod:'ALBMD',ad:'Albaraka Menkul A.Ş.',konu:'Grup Devir',ozet:'Pusula Grubu devir süreci',sektor:'Finans',risk:'NEGATIF',skor:0.80,aciklama:'Grup şirketleri devir süreci devam etmektedir.'},
+{id:22,kod:'TEHOL',ad:'Tekfen Holding A.Ş.',konu:'İhale',ozet:'Yeni ihale kazanıldı',sektor:'İnşaat',risk:'POZITIF',skor:0.22,aciklama:'Önemli bir ihale kazanılmıştır.'},
+{id:23,kod:'PRZMA',ad:'Prizma Fon A.Ş.',konu:'Likidite',ozet:'Likidite açıklaması',sektor:'Finans',risk:'NOTR',skor:0.40,aciklama:'Fon likidite durumu hakkında bilgilendirme yapılmıştır.'},
+{id:24,kod:'MANAS',ad:'Manas Enerji A.Ş.',konu:'Yatırım',ozet:'Yeni yatırım kararı',sektor:'Enerji',risk:'POZITIF',skor:0.20,aciklama:'Yeni yatırım projesi onaylanmıştır.'},
+{id:25,kod:'PEKGY',ad:'Peksoy Gayrimenkul A.Ş.',konu:'Gayrimenkul Satışı',ozet:'Gayrimenkul satışı',sektor:'İnşaat',risk:'POZITIF',skor:0.25,aciklama:'Gayrimenkul satışı gerçekleştirilmiştir.'},
+{id:26,kod:'KTLEV',ad:'Kartallar Levha A.Ş.',konu:'Üretim',ozet:'Üretim kapasite artışı',sektor:'Sanayi',risk:'POZITIF',skor:0.18,aciklama:'Üretim kapasitesi artırılmıştır.'},
+{id:27,kod:'PSD',ad:'Pusula Serbest Fon',konu:'Temerrüt',ozet:'Ödeme güçlüğü',sektor:'Finans',risk:'KRITIK',skor:0.96,aciklama:'Fon yatırımcı ödemelerinde temerrüt oluşmuştur.'},
+{id:28,kod:'SKP',ad:'Tera Para Piyasası Fonu',konu:'Tasfiye',ozet:'Fon tasfiye süreci',sektor:'Finans',risk:'KRITIK',skor:0.94,aciklama:'SPK kararı ile fon tasfiye edilmiştir.'},
+{id:29,kod:'DOH',ad:'Tera Hisse Senedi Fonu',konu:'Tasfiye',ozet:'Fon tasfiye süreci',sektor:'Finans',risk:'KRITIK',skor:0.93,aciklama:'SPK kararı ile fon tasfiye edilmiştir.'},
+{id:30,kod:'TLYF',ad:'Tera Serbest Fon',konu:'Likidite',ozet:'Likidite açıklaması',sektor:'Finans',risk:'NEGATIF',skor:0.75,aciklama:'Fon likidite yönetimi hakkında açıklama yapılmıştır.'}
+];
+
+let filtered=[...data];
+
+function render(){
+const tbody=document.getElementById('tbody');
+tbody.innerHTML=filtered.map(n=>`
+<tr>
+<td style="font-weight:700">${n.kod}</td>
+<td>${n.ad}</td>
+<td>${n.konu}</td>
+<td style="color:#666;font-size:12px">${n.ozet}</td>
+<td>${n.sektor}</td>
+<td><span class="badge badge-${n.risk.toLowerCase()}">${n.risk}</span></td>
+<td><button class="btn" onclick="showDetail(${n.id})">Detay →</button></td>
+</tr>
+`).join('');
+
+document.getElementById('count').textContent=filtered.length+' bildirim';
+document.getElementById('kritik').textContent=filtered.filter(n=>n.risk==='KRITIK').length;
+document.getElementById('negatif').textContent=filtered.filter(n=>n.risk==='NEGATIF').length;
+document.getElementById('pozitif').textContent=filtered.filter(n=>n.risk==='POZITIF').length;
+}
+
+function filter(risk){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+event.target.classList.add('active');
+filtered=risk?data.filter(n=>n.risk===risk):[...data];
+render();
+}
+
+function showDetail(id){
+const n=data.find(x=>x.id===id);
+if(!n)return;
+
+document.getElementById('modalBody').innerHTML=`
+<div class="section">
+<h4>🏢 Firma Bilgileri</h4>
+<div class="row"><span class="row-label">Hisse Kodu:</span><span class="row-value">${n.kod}</span></div>
+<div class="row"><span class="row-label">Şirket Adı:</span><span class="row-value">${n.ad}</span></div>
+<div class="row"><span class="row-label">Sektör:</span><span class="row-value">${n.sektor}</span></div>
+</div>
+<div class="section">
+<h4>📋 KAP Bildirimi</h4>
+<div class="row"><span class="row-label">Konu:</span><span class="row-value">${n.konu}</span></div>
+<div class="row"><span class="row-label">Özet:</span><span class="row-value">${n.ozet}</span></div>
+<div style="margin-top:10px"><span class="row-label">Açıklama:</span><p style="margin-top:5px;font-size:12px;color:#4b5563;line-height:1.6">${n.aciklama}</p></div>
+</div>
+<div class="section">
+<h4>⚠️ Risk Analizi</h4>
+<div class="row"><span class="row-label">Risk Seviyesi:</span><span class="row-value"><span class="badge badge-${n.risk.toLowerCase()}">${n.risk}</span></span></div>
+<div class="row"><span class="row-label">Risk Skoru:</span><span class="row-value">${(n.skor*100).toFixed(0)}%</span></div>
+<div class="bar"><div class="bar-fill" style="width:${n.skor*100}%"></div></div>
+</div>
+<div class="section">
+<h4>✅ Önerilen Aksiyonlar</h4>
+<ul class="actions">
+${n.risk==='KRITIK'?'<li>• Kredi limitlerini acilen dondur</li><li>• Kredi Komitesi\'ne acil dosya sun</li><li>• Teminat yapısını gözden geçir</li>':n.risk==='NEGATIF'?'<li>• Likidite rasyolarını izle</li><li>• Nakit akış analizi talep et</li>':'<li>• Standart izleme prosedürlerini uygula</li>'}
+</ul>
+</div>
+`;
+
+document.getElementById('modal').classList.add('active');
+}
+
+function closeModal(){
+document.getElementById('modal').classList.remove('active');
+}
+
+document.getElementById('modal').addEventListener('click',function(e){
+if(e.target===this)closeModal();
+});
+
+render();
+</script>
+</body>
+</html>
