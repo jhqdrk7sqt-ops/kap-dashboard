@@ -36,7 +36,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#f
 .risk-tab[data-risk="NOTR"].active{background:#6b7280}
 .risk-tab[data-risk="POZITIF"].active{background:#10b981}
 .table-wrap{background:#fff;border-radius:6px;overflow:hidden;border:1px solid #e5e7eb}
-.table-header{padding:12px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;background:#f9fafb}
+.table-header{padding:12px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;background:#f9fafb;flex-wrap:wrap;gap:10px}
 .table-header h3{font-size:15px;font-weight:600}
 table{width:100%;border-collapse:collapse}
 th{background:#f9fafb;padding:10px;text-align:left;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
@@ -57,9 +57,13 @@ tr:hover{background:#f9fafb}
 .btn:hover{background:#2563eb}
 .btn-kap{padding:6px 12px;background:#1e3a8a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 .btn-kap:hover{background:#1e40af}
+.btn-data{padding:8px 16px;background:#059669;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn-data:hover{background:#047857}
+.btn-sample{padding:6px 12px;background:#7c3aed;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-sample:hover{background:#6d28d9}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;padding:20px}
 .modal.active{display:flex;align-items:center;justify-content:center}
-.modal-box{background:#fff;border-radius:8px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-box{background:#fff;border-radius:8px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto}
 .modal-head{padding:16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:10}
 .modal-head h2{font-size:18px;font-weight:700}
 .modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:#666}
@@ -74,7 +78,15 @@ tr:hover{background:#f9fafb}
 .bar-fill{height:100%;background:linear-gradient(to right,#10b981,#f59e0b,#ef4444)}
 .actions{list-style:none}
 .actions li{padding:8px;background:#fff;border-radius:4px;margin-bottom:6px;font-size:12px;color:#4b5563;border:1px solid #e5e7eb}
-.methodology-note{background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:10px;margin-bottom:12px;font-size:11px;color:#92400e}
+.data-source-banner{background:#d1fae5;border:1px solid #10b981;border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px;color:#065f46;display:flex;justify-content:space-between;align-items:center}
+.data-source-banner.mock{background:#fef3c7;border-color:#f59e0b;color:#92400e}
+textarea{width:100%;min-height:300px;padding:12px;border:1px solid #d1d5db;border-radius:6px;font-family:monospace;font-size:12px;resize:vertical}
+.help-box{background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:12px;margin-bottom:12px;font-size:12px;color:#1e40af;line-height:1.6}
+.help-box ol{margin-left:20px;margin-top:8px}
+.help-box li{margin-bottom:4px}
+.stats-bar{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.stat-item{background:#fff;padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;font-size:12px}
+.stat-item strong{color:#1e3a8a}
 @media(max-width: 1024px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
 @media(max-width: 768px) {
   .kpi-row { grid-template-columns: repeat(3, 1fr); }
@@ -89,15 +101,28 @@ tr:hover{background:#f9fafb}
 
 <div class="header">
   <h1>🏦 KAP Risk İzleme Dashboard</h1>
-  <p><strong>01.09.2026 - 17.09.2026</strong> | Kredi İzleme Birimi - Özel Durum Açıklamaları Analizi</p>
+  <p>Kredi İzleme Birimi - Özel Durum Açıklamaları Analizi</p>
 </div>
 
 <div class="container">
 
-  <div class="methodology-note">
-    <strong>⚠️ Metodoloji Notu:</strong> Bu dashboard'daki veriler <strong>temsilî senaryolar</strong> olup, gerçek KAP bildirimlerini yansıtmaktadır. Şirket-konu eşleştirmeleri sektör bazlı mantıksal kurallara göre yapılmıştır (örn: Bankalar → Yasal Takip Portföy Satışı, VYŞ'ler → Portföy Alımı). Gerçek zamanlı entegrasyon için KAP API bağlantısı gereklidir.
+  <!-- Veri Kaynağı Banner -->
+  <div id="dataSourceBanner" class="data-source-banner mock">
+    <div>
+      <strong>⚠️ Temsilî Veri Modu:</strong> Dashboard şu anda örnek verilerle çalışıyor. Gerçek KAP verilerini yüklemek için sağdaki butonu kullanın.
+    </div>
+    <button class="btn-data" onclick="openDataModal()">📥 Gerçek Veri Yükle</button>
   </div>
 
+  <!-- İstatistik Barı -->
+  <div class="stats-bar" id="statsBar" style="display:none">
+    <div class="stat-item">📊 Toplam: <strong id="statTotal">0</strong></div>
+    <div class="stat-item">📅 Tarih Aralığı: <strong id="statDateRange">-</strong></div>
+    <div class="stat-item">🏢 Farklı Şirket: <strong id="statCompanies">0</strong></div>
+    <div class="stat-item">📌 Farklı Konu: <strong id="statSubjects">0</strong></div>
+  </div>
+
+  <!-- KPI -->
   <div class="kpi-row">
     <div class="kpi blue"><div class="kpi-label">Toplam ÖDA</div><div class="kpi-value" id="total">0</div></div>
     <div class="kpi red"><div class="kpi-label">Kritik</div><div class="kpi-value" id="kritik">0</div></div>
@@ -106,6 +131,7 @@ tr:hover{background:#f9fafb}
     <div class="kpi green"><div class="kpi-label">Pozitif</div><div class="kpi-value" id="pozitif">0</div></div>
   </div>
 
+  <!-- Charts -->
   <div class="charts-grid">
     <div class="chart-box">
       <h4>📈 Günlük İlan Hacmi <span style="font-size:10px;color:#9ca3af">(Tıklayarak filtrele)</span></h4>
@@ -121,6 +147,7 @@ tr:hover{background:#f9fafb}
     </div>
   </div>
 
+  <!-- Filters -->
   <div class="filters-box">
     <div class="filter-grid">
       <div class="filter-item">
@@ -135,16 +162,6 @@ tr:hover{background:#f9fafb}
         <label>📌 Konu Başlığı</label>
         <select id="subjectFilter" onchange="applyFilters()">
           <option value="">Tüm Konular</option>
-          <option value="Yasal Takip Portföy Satışı">Yasal Takip Portföy Satışı (Banka → VYŞ)</option>
-          <option value="Yasal Takip Portföy Alımı">Yasal Takip Portföy Alımı (VYŞ)</option>
-          <option value="Kayyum Atanması">Kayyum Atanması</option>
-          <option value="Temerrüt">Temerrüt / Ödeme Güçlüğü</option>
-          <option value="Fon Tasfiyesi">Fon Tasfiyesi</option>
-          <option value="Pay Geri Alım">Pay Geri Alım</option>
-          <option value="Bono İtfası">Bono İtfası</option>
-          <option value="Yönetici Değişikliği">Yönetici Değişikliği</option>
-          <option value="Rekabet Kurumu">Rekabet Kurumu Kararı</option>
-          <option value="Sözleşme / İhale">Sözleşme / İhale</option>
         </select>
       </div>
       <div class="filter-item" style="display:flex;align-items:flex-end">
@@ -160,10 +177,14 @@ tr:hover{background:#f9fafb}
     </div>
   </div>
 
+  <!-- Table -->
   <div class="table-wrap">
     <div class="table-header">
       <h3>📋 Özel Durum Açıklamaları</h3>
-      <span id="count" style="font-size:12px;color:#666">0 bildirim</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="count" style="font-size:12px;color:#666">0 bildirim</span>
+        <button class="btn-sample" onclick="loadSampleData()">📋 Örnek Veri Yükle</button>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table>
@@ -192,7 +213,45 @@ tr:hover{background:#f9fafb}
 
 </div>
 
-<div class="modal" id="modal">
+<!-- Data Import Modal -->
+<div class="modal" id="dataModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>📥 Gerçek KAP Verisi Yükle</h2>
+      <button class="modal-close" onclick="closeDataModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="help-box">
+        <strong>📖 Nasıl Yapılır?</strong>
+        <ol>
+          <li>KAP'ın detaylı sorgulama sayfasına gidin: <a href="https://www.kap.org.tr/tr/detayli-sorgulama" target="_blank" style="color:#1e40af;font-weight:600">https://www.kap.org.tr/tr/detayli-sorgulama</a></li>
+          <li>Bildirim Tipi: <strong>"Özel Durum Açıklaması (ÖDA)"</strong> seçin</li>
+          <li>Tarih aralığını belirleyin (örn: 01.09.2026 - 17.09.2026)</li>
+          <li>Sonuçları CSV veya Excel olarak indirin, ya da tablo verisini kopyalayın</li>
+          <li>Aşağıdaki kutuya yapıştırın (her satır bir bildirim olmalı)</li>
+        </ol>
+        <p style="margin-top:10px"><strong>💡 İpucu:</strong> KAP'tan kopyaladığınız veriyi olduğu gibi yapıştırabilirsiniz. Sistem otomatik olarak parse edecektir.</p>
+      </div>
+
+      <div class="section">
+        <h4>📋 Veri Formatı</h4>
+        <p style="font-size:12px;color:#4b5563;margin-bottom:8px">Her satır bir bildirim olmalı. Beklenen format:</p>
+        <code style="display:block;background:#f3f4f6;padding:8px;border-radius:4px;font-size:11px;white-space:pre-wrap">Tarih | Hisse Kodu | Şirket Adı | Bildirim Tipi | Konu | Özet | Açıklama | KAP Bildirim ID</code>
+        <p style="font-size:11px;color:#6b7280;margin-top:8px">veya sekme/ayraç ile ayrılmış herhangi bir tablo formatı kabul edilir.</p>
+      </div>
+
+      <textarea id="dataInput" placeholder="KAP'tan kopyaladığınız verileri buraya yapıştırın..."></textarea>
+
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="btn" style="background:#6b7280" onclick="closeDataModal()">İptal</button>
+        <button class="btn" style="background:#059669" onclick="importData()">✅ Veriyi Yükle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal" id="detailModal">
   <div class="modal-box">
     <div class="modal-head">
       <h2>📊 Firma Detay Raporu</h2>
@@ -204,341 +263,242 @@ tr:hover{background:#f9fafb}
 
 <script>
 // ============================================
-// AKILLI VERİ MODELİ - Şirket-Konu Mantığı
+// GLOBAL DEĞİŞKENLER
 // ============================================
-
-// Şirket Kategorileri ve İzin Verilen Konuları
-const companyProfiles = {
-  // BANKALAR - Yasal Takip Portföy Satışı yapabilirler
-  'BANKA': {
-    companies: [
-      {kod:'LIDFA', ad:'Lider Faktoring A.Ş.'},
-      {kod:'ALBMD', ad:'Albaraka Menkul A.Ş.'},
-      {kod:'INFO', ad:'İnfo Yatırım A.Ş.'},
-      {kod:'GLRYH', ad:'Güler Yatırım Holding A.Ş.'},
-      {kod:'GRNYO', ad:'Garanti Yatırım Ortaklığı A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Yasal Takip Portföy Satışı', risk: 'POZITIF', weight: 0.35 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.25 },
-      { konu: 'Rekabet Kurumu', risk: 'NEGATIF', weight: 0.15 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.15 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.10 }
-    ]
-  },
-  
-  // VYŞ'LER - Yasal Takip Portföy Alımı yaparlar
-  'VYS': {
-    companies: [
-      {kod:'AKTIF', ad:'Aktif Varlık Yönetim A.Ş.'},
-      {kod:'DNGVR', ad:'Denge Varlık Yönetim A.Ş.'},
-      {kod:'GCLVR', ad:'Güçlü Varlık Yönetim A.Ş.'},
-      {kod:'HDFVR', ad:'Hedef Varlık Yönetim A.Ş.'},
-      {kod:'KTVVR', ad:'Kocatepe Varlık Yönetim A.Ş.'},
-      {kod:'TMSVR', ad:'TMSF Varlık Yönetim A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Yasal Takip Portföy Alımı', risk: 'POZITIF', weight: 0.50 },
-      { konu: 'Temerrüt', risk: 'KRITIK', weight: 0.15 },
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.15 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.10 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.10 }
-    ]
-  },
-  
-  // PORTFÖY ŞİRKETLERİ - Fon Tasfiyesi, Temerrüt
-  'PORTFOY': {
-    companies: [
-      {kod:'TERA', ad:'Tera Portföy Yönetimi A.Ş.'},
-      {kod:'PUSULA', ad:'Pusula Portföy A.Ş.'},
-      {kod:'HEDEF', ad:'Hedef Portföy A.Ş.'},
-      {kod:'PRZMA', ad:'Prizma Fon A.Ş.'},
-      {kod:'PSD', ad:'Pusula Serbest Fon'},
-      {kod:'SKP', ad:'Tera Para Piyasası Fonu'}
-    ],
-    allowedSubjects: [
-      { konu: 'Fon Tasfiyesi', risk: 'KRITIK', weight: 0.30 },
-      { konu: 'Temerrüt', risk: 'KRITIK', weight: 0.25 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.20 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.15 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.10 }
-    ]
-  },
-  
-  // FUTBOL KULÜPLERİ - Sözleşme, Sponsorluk
-  'FUTBOL': {
-    companies: [
-      {kod:'BJKAS', ad:'Beşiktaş Futbol Yatırımları A.Ş.'},
-      {kod:'GALSR', ad:'Galatasaray Sportif A.Ş.'},
-      {kod:'FENER', ad:'Fenerbahçe Futbol A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.40 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.25 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.20 },
-      { konu: 'Pay Geri Alım', risk: 'NEGATIF', weight: 0.15 }
-    ]
-  },
-  
-  // SANAYİ / KABLO - Kayyum, Rekabet Kurumu
-  'SANAYI': {
-    companies: [
-      {kod:'ALVES', ad:'Alves Kablo San. A.Ş.'},
-      {kod:'DMSAS', ad:'Demirsaş Döküm A.Ş.'},
-      {kod:'GOODY', ad:'Goodyear Lastikleri A.Ş.'},
-      {kod:'CMENT', ad:'Çimento Sanayi A.Ş.'},
-      {kod:'KTLEV', ad:'Kartallar Levha A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Kayyum Atanması', risk: 'KRITIK', weight: 0.15 },
-      { konu: 'Rekabet Kurumu', risk: 'NEGATIF', weight: 0.25 },
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.20 },
-      { konu: 'Pay Geri Alım', risk: 'NEGATIF', weight: 0.15 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.15 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.10 }
-    ]
-  },
-  
-  // ENERJİ / MADEN - Yatırım, Teminat
-  'ENERJI_MADEN': {
-    companies: [
-      {kod:'SARE', ad:'Şa-Ra Enerji A.Ş.'},
-      {kod:'CVKMD', ad:'CVK Madencilik A.Ş.'},
-      {kod:'TRALT', ad:'Türk Altın İşletmeleri A.Ş.'},
-      {kod:'MANAS', ad:'Manas Enerji A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.30 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.25 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.15 },
-      { konu: 'Pay Geri Alım', risk: 'NEGATIF', weight: 0.15 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.15 }
-    ]
-  },
-  
-  // TEKNOLOJİ - Sözleşme, Yönetici
-  'TEKNOLOJI': {
-    companies: [
-      {kod:'SMART', ad:'Smartiks Yazılım A.Ş.'},
-      {kod:'PAPIL', ad:'Papilon Savunma Tek. A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.40 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.25 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.20 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.15 }
-    ]
-  },
-  
-  // İNŞAAT - Teminat, İhale
-  'INSAT': {
-    companies: [
-      {kod:'UCAYM', ad:'Üçay Mühendislik A.Ş.'},
-      {kod:'TEHOL', ad:'Tekfen Holding A.Ş.'},
-      {kod:'PEKGY', ad:'Peksoy Gayrimenkul A.Ş.'},
-      {kod:'MCARD', ad:'Metropal Kurumsal Hiz. A.Ş.'}
-    ],
-    allowedSubjects: [
-      { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.30 },
-      { konu: 'Pay Geri Alım', risk: 'NEGATIF', weight: 0.20 },
-      { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.20 },
-      { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.15 },
-      { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.15 }
-    ]
-  }
-};
-
-// Bağlamsal Özet Üretici
-function generateContextualSummary(company, subject, sektor) {
-  const summaries = {
-    'Yasal Takip Portföy Satışı': [
-      `Şirket, ${Math.floor(Math.random() * 800 + 200)} M TL nominal değerli yasal takip alacağını ${['Aktif Varlık', 'Denge Varlık', 'Güçlü Varlık'][Math.floor(Math.random()*3)]} Yönetim A.Ş.'ye devretmiştir.`,
-      `Banka, NPL portföyünden ${Math.floor(Math.random() * 500 + 100)} M TL tutarında alacak satışı gerçekleştirmiştir.`,
-      `Yasal takip kapsamındaki ${Math.floor(Math.random() * 3000 + 500)} adet alacak VYŞ'ye devredilmiştir.`
-    ],
-    'Yasal Takip Portföy Alımı': [
-      `Şirket, bir bankadan ${Math.floor(Math.random() * 600 + 150)} M TL nominal değerli yasal takip alacak portföyü satın almıştır.`,
-      `NPL portföyü satın alımı tamamlanmıştır. Portföy değeri ${Math.floor(Math.random() * 400 + 100)} M TL'dir.`,
-      `${Math.floor(Math.random() * 2000 + 300)} adet tahsili gecikmiş alacak bankadan satın alınmıştır.`
-    ],
-    'Kayyum Atanması': [
-      `Mahkeme kararı ile şirket yönetimine kayyum atanmıştır. Operasyonel belirsizlik devam etmektedir.`,
-      `Ankara Cumhuriyet Başsavcılığı soruşturması kapsamında TMSF yetkili yönetim/kayyum olarak atanmıştır.`,
-      `Şirket hakkında yürütülen soruşturma neticesinde kayyum ataması yapılmıştır.`
-    ],
-    'Temerrüt': [
-      `Yatırımcı ödemelerinde temerrüt oluştuğu KAP'a bildirilmiştir.`,
-      `Fon katılma payı iade taleplerinde ödeme güçlüğü yaşanmaktadır.`,
-      `Bazı yükümlülüklerde temerrüt durumu söz konusudur.`
-    ],
-    'Fon Tasfiyesi': [
-      `SPK kararı ile ilgili yatırım fonunun tasfiyesine karar verilmiştir.`,
-      `SPK'nın 17.09.2026 tarihli kararı kapsamında fon tasfiye süreci başlatılmıştır.`,
-      `Fonun tasfiyesine karar verilmiş, tasfiye memuru atanmıştır.`
-    ],
-    'Pay Geri Alım': [
-      `Yönetim Kurulu kararı ile azami ${Math.floor(Math.random() * 2 + 1)}.${Math.floor(Math.random() * 9)} Milyar TL tutarında pay geri alım programı başlatılmıştır.`,
-      `Çıkarılmış sermayenin %${Math.floor(Math.random() * 8 + 2)}'si oranında pay geri alımı yapılacaktır.`,
-      `Pay geri alım programı kapsamında işlemlere başlanmıştır.`
-    ],
-    'Bono İtfası': [
-      `${Math.floor(Math.random() * 100 + 20)} M TL anapara tutarlı bononun itfa ödemesi başarıyla gerçekleştirilmiştir.`,
-      `${Math.floor(Math.random() * 50 + 10)} M TL kupon ve anapara ödemesi vadesinde yapılmıştır.`,
-      `Tahvil itfa ödemesi zamanında yerine getirilmiştir.`
-    ],
-    'Yönetici Değişikliği': [
-      `Şirket Genel Müdürü görevinden ayrılmış, yeni atama yapılmıştır.`,
-      `Yatırımcı İlişkileri Bölümü Yöneticisi istifa etmiştir.`,
-      `Bağımsız denetim kuruluşu değiştirilmiştir.`
-    ],
-    'Rekabet Kurumu': [
-      `Rekabet Kurumu tarafından şirket hakkında soruşturma başlatılmıştır.`,
-      `Rekabet Kurumu kararı kamuya duyurulmuştur.`,
-      `Rekabet Kurumu önaraştırma sonuçları açıklanmıştır.`
-    ],
-    'Sözleşme / İhale': [
-      `Önemli bir müşteri ile ${Math.floor(Math.random() * 500 + 100)} M TL değerinde sözleşme imzalanmıştır.`,
-      `Yurtdışında yeni bir proje ihalesi kazanılmıştır.`,
-      `Ana sponsorluk anlaşması imzalanmıştır.`
-    ],
-    'Piyasa Gelişmeleri': [
-      `Borsa İstanbul'da yaşanan dalgalanmalar hakkında bilgilendirme yapılmıştır.`,
-      `Pay fiyatındaki hareketler nedeniyle bilgilendirme açıklaması yapılmıştır.`,
-      `Piyasa koşulları hakkında yatırımcı bilgilendirmesi.`
-    ]
-  };
-  
-  const options = summaries[subject] || ['Açıklama yapılmıştır.'];
-  return options[Math.floor(Math.random() * options.length)];
-}
-
-// Bağlamsal Detay Açıklaması
-function generateContextualExplanation(company, subject, sektor) {
-  const explanations = {
-    'Yasal Takip Portföy Satışı': `Şirketimiz Yönetim Kurulu'nun kararı uyarınca, tahsili gecikmiş alacaklar (NPL) portföyümüzden bir kısmı varlık yönetim şirketlerine devredilmiştir. Bu işlem, aktif kalitemizin iyileştirilmesi ve risk ağırlıklı varlıkların optimize edilmesi amacıyla gerçekleştirilmiştir. Devir bedeli ve şartları ilgili mevzuat çerçevesinde belirlenmiştir.`,
-    'Yasal Takip Portföy Alımı': `Şirketimiz, bir bankacılık kuruluşundan yasal takip kapsamındaki alacak portföyünü satın almıştır. Satın alma işlemi piyasa koşulları ve şirketimizin yatırım stratejisi çerçevesinde gerçekleştirilmiştir. Portföyün tahsilat potansiyeli detaylı olarak analiz edilmiştir.`,
-    'Kayyum Atanması': `Şirketimiz hakkında yürütülen soruşturma kapsamında, mahkemece şirket yönetimine kayyum atanmasına karar verilmiştir. Bu karar şirketimizin operasyonel süreçlerini etkileyebilir. Gelişmeler kamuoyu ile paylaşılacaktır.`,
-    'Temerrüt': `Şirketimizin bazı finansal yükümlülüklerini vadesinde yerine getirmekte güçlük çektiği tespit edilmiştir. İlgili taraflarla yapılandırma görüşmeleri devam etmektedir.`,
-    'Fon Tasfiyesi': `Sermaye Piyasası Kurulu'nun ilgili kararı uyarınca, şirketimiz kurucusu/katılımcısı olduğu yatırım fonunun tasfiyesine karar verilmiştir. Tasfiye süreci mevzuat çerçevesinde yürütülecektir.`,
-    'Pay Geri Alım': `Yönetim Kurulu kararı ile şirket paylarının Borsa İstanbul'da geri alınmasına karar verilmiştir. Geri alım programı, şirketimizin geleceğine duyduğu güvenin göstergesidir.`,
-    'Bono İtfası': `Şirketimizin ihraç ettiği tahvillerin vadesi gelen anapara ve kupon ödemeleri zamanında ve eksiksiz olarak gerçekleştirilmiştir.`,
-    'Yönetici Değişikliği': `Şirketimiz üst yönetiminde değişiklik yapılmıştır. Yeni atama, şirket stratejisinin sürdürülebilirliği çerçevesinde gerçekleştirilmiştir.`,
-    'Rekabet Kurumu': `Rekabet Kurumu tarafından şirketimiz hakkında yürütülen soruşturma sonuçlanmıştır. İlgili karar kamuoyu ile paylaşılmıştır.`,
-    'Sözleşme / İhale': `Şirketimiz önemli bir ticari sözleşme imzalamıştır. Sözleşme bedeli ve süresi şirket faaliyetleri açısından anlamlı bir katkı sağlayacaktır.`,
-    'Piyasa Gelişmeleri': `Son dönemde piyasalarda yaşanan gelişmeler ve şirket paylarındaki fiyat hareketleri nedeniyle yatırımcılarımızın bilgilendirilmesi ihtiyacı doğmuştur. Şirketimizin operasyonel ve finansal yapısında olağandışı bir değişiklik bulunmamaktadır.`
-  };
-  
-  return explanations[subject] || 'Kamuoyunun ve yatırımcıların bilgilerine sunulur.';
-}
-
-// Rastgele Konu Seçici (Ağırlıklı)
-function selectSubject(allowedSubjects) {
-  const rand = Math.random();
-  let sum = 0;
-  for (let s of allowedSubjects) {
-    sum += s.weight;
-    if (rand <= sum) return s;
-  }
-  return allowedSubjects[0];
-}
-
-// ============================================
-// VERİ ÜRETİCİ
-// ============================================
-function generateData() {
-  const data = [];
-  let idCounter = 1;
-  const startDate = new Date('2026-09-01');
-  const endDate = new Date('2026-09-17');
-  
-  // Kategori ağırlıkları (hangi sektörden ne kadar bildirim gelecek)
-  const categoryWeights = {
-    'BANKA': 0.15,
-    'VYS': 0.10,
-    'PORTFOY': 0.12,
-    'FUTBOL': 0.05,
-    'SANAYI': 0.20,
-    'ENERJI_MADEN': 0.15,
-    'TEKNOLOJI': 0.10,
-    'INSAT': 0.13
-  };
-  
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toISOString().split('T')[0];
-    const dailyCount = Math.floor(Math.random() * (300 - 200 + 1)) + 200;
-    
-    for (let i = 0; i < dailyCount; i++) {
-      // 1. Kategori seç (ağırlıklı)
-      const rand = Math.random();
-      let sum = 0;
-      let selectedCategory = 'SANAYI';
-      for (let cat in categoryWeights) {
-        sum += categoryWeights[cat];
-        if (rand <= sum) {
-          selectedCategory = cat;
-          break;
-        }
-      }
-      
-      const profile = companyProfiles[selectedCategory];
-      
-      // 2. Kategoriden şirket seç
-      const company = profile.companies[Math.floor(Math.random() * profile.companies.length)];
-      
-      // 3. Şirketin izin verilen konularından konu seç
-      const subject = selectSubject(profile.allowedSubjects);
-      
-      // 4. Sektör belirle
-      const sektorMap = {
-        'BANKA': 'Finans',
-        'VYS': 'Finans',
-        'PORTFOY': 'Finans',
-        'FUTBOL': 'Hizmet',
-        'SANAYI': 'Sanayi',
-        'ENERJI_MADEN': Math.random() > 0.5 ? 'Enerji' : 'Madencilik',
-        'TEKNOLOJI': 'Teknoloji',
-        'INSAT': 'İnşaat'
-      };
-      const sektor = sektorMap[selectedCategory];
-      
-      // 5. Risk skorunu hesapla
-      let skor = 0.35;
-      if (subject.risk === 'KRITIK') skor = 0.90 + (Math.random() * 0.10);
-      else if (subject.risk === 'NEGATIF') skor = 0.60 + (Math.random() * 0.25);
-      else if (subject.risk === 'POZITIF') skor = 0.10 + (Math.random() * 0.20);
-      
-      // 6. Benzersiz KAP URL (her kaydın kendi ID'si var, tutarlı)
-      const kapId = 1660000 + idCounter;
-      
-      data.push({
-        id: idCounter++,
-        tarih: dateStr,
-        kod: company.kod,
-        ad: company.ad,
-        konu: subject.konu,
-        ozet: generateContextualSummary(company, subject.konu, sektor),
-        sektor: sektor,
-        risk: subject.risk,
-        skor: parseFloat(skor.toFixed(2)),
-        aciklama: generateContextualExplanation(company, subject.konu, sektor),
-        kap_url: `https://www.kap.org.tr/tr/Bildirim/${kapId}`,
-        kategori: selectedCategory
-      });
-    }
-  }
-  
-  return data.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-}
-
-const rawData = generateData();
-let filtered = [...rawData];
+let rawData = [];
+let filtered = [];
 let currentRisk = '';
 let currentPage = 1;
 const itemsPerPage = 50;
 let trendChartInstance = null;
 let sectorChartInstance = null;
 let topicChartInstance = null;
+let isRealData = false;
 
+// ============================================
+// RİSK ANALİZ MOTORU (NLP-Lite)
+// ============================================
+const riskKeywords = {
+  'KRITIK': ['kayyum', 'temerrüt', 'iflas', 'soruşturma', 'ödeme güçlüğü', 'tasfiye', 'haciz', 'icra', 'tutuklama', 'gözaltı', 'faaliyet durdurma', 'lisans iptali', 'işlem yasağı', 'dava açıldı'],
+  'NEGATIF': ['zarar', 'borç', 'yükümlülük', 'düşüş', 'azalış', 'iptal', 'erteleme', 'gecikme', 'yapılandırma', 'kısıtlama', 'ceza', 'yaptırım', 'uyarı', 'geri alım', 'teminat'],
+  'POZITIF': ['kâr', 'büyüme', 'artış', 'başarı', 'ödeme', 'itfa', 'yatırım', 'genişleme', 'sözleşme', 'ihale', 'onay', 'güçlü', 'istikrarlı', 'sürdürülebilir', 'devir']
+};
+
+function analyzeRisk(subject, summary, explanation) {
+  const text = `${subject} ${summary} ${explanation}`.toLowerCase();
+  let scores = { KRITIK: 0, NEGATIF: 0, POZITIF: 0 };
+  
+  for (let level in riskKeywords) {
+    for (let keyword of riskKeywords[level]) {
+      if (text.includes(keyword)) {
+        scores[level] += (level === 'KRITIK' ? 3 : level === 'NEGATIF' ? 2 : 1);
+      }
+    }
+  }
+  
+  // Konu bazlı öncelik
+  const subjectLower = subject.toLowerCase();
+  if (subjectLower.includes('kayyum') || subjectLower.includes('temerrüt') || subjectLower.includes('tasfiye')) {
+    scores.KRITIK += 5;
+  } else if (subjectLower.includes('geri alım') || subjectLower.includes('borçlanma')) {
+    scores.NEGATIF += 3;
+  } else if (subjectLower.includes('sözleşme') || subjectLower.includes('ihale') || subjectLower.includes('itfa')) {
+    scores.POZITIF += 2;
+  }
+  
+  // Kazanan risk seviyesini belirle
+  const maxScore = Math.max(scores.KRITIK, scores.NEGATIF, scores.POZITIF);
+  if (maxScore === 0) return { level: 'NOTR', score: 0.35 };
+  
+  if (scores.KRITIK === maxScore) return { level: 'KRITIK', score: 0.85 + Math.random() * 0.15 };
+  if (scores.NEGATIF === maxScore) return { level: 'NEGATIF', score: 0.60 + Math.random() * 0.25 };
+  return { level: 'POZITIF', score: 0.10 + Math.random() * 0.25 };
+}
+
+// ============================================
+// VERİ PARSE MOTORU
+// ============================================
+function parseKapData(rawText) {
+  const lines = rawText.trim().split('\n').filter(l => l.trim());
+  const parsed = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // Farklı ayraç formatlarını dene
+    let parts = null;
+    if (line.includes('\t')) parts = line.split('\t');
+    else if (line.includes('|')) parts = line.split('|').map(p => p.trim());
+    else if (line.includes(';')) parts = line.split(';').map(p => p.trim());
+    else parts = [line];
+    
+    if (parts.length < 3) continue;
+    
+    // Başlık satırını atla
+    if (parts[0].toLowerCase().includes('tarih') && parts[1].toLowerCase().includes('kod')) continue;
+    
+    try {
+      // Tarih parse
+      let tarih = parts[0].trim();
+      if (tarih.includes('.')) {
+        const [d, m, y] = tarih.split('.');
+        if (y && y.length === 4) tarih = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+      
+      const kod = parts[1] ? parts[1].trim() : '';
+      const ad = parts[2] ? parts[2].trim() : '';
+      const konu = parts[3] ? parts[3].trim() : 'Genel Açıklama';
+      const ozet = parts[4] ? parts[4].trim() : konu;
+      const aciklama = parts[5] ? parts[5].trim() : ozet;
+      const kapId = parts[6] ? parts[6].trim() : (1660000 + i);
+      
+      if (!kod || !tarih) continue;
+      
+      // Risk analizi
+      const riskResult = analyzeRisk(konu, ozet, aciklama);
+      
+      // Sektör tahmini
+      const sektor = guessSector(ad, konu);
+      
+      parsed.push({
+        id: i + 1,
+        tarih: tarih,
+        kod: kod,
+        ad: ad,
+        konu: konu,
+        ozet: ozet,
+        aciklama: aciklama,
+        sektor: sektor,
+        risk: riskResult.level,
+        skor: parseFloat(riskResult.score.toFixed(2)),
+        kap_url: `https://www.kap.org.tr/tr/Bildirim/${kapId}`,
+        kaynak: 'GERCEK_KAP'
+      });
+    } catch (e) {
+      console.warn('Satır parse edilemedi:', line, e);
+    }
+  }
+  
+  return parsed.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+}
+
+function guessSector(companyName, subject) {
+  const name = companyName.toLowerCase();
+  if (name.includes('bank') || name.includes('faktoring') || name.includes('yatırım') || name.includes('portföy') || name.includes('fon') || name.includes('menkul')) return 'Finans';
+  if (name.includes('enerji') || name.includes('elektrik')) return 'Enerji';
+  if (name.includes('maden') || name.includes('altın')) return 'Madencilik';
+  if (name.includes('inşaat') || name.includes('gayrimenkul') || name.includes('mühendislik')) return 'İnşaat';
+  if (name.includes('yazılım') || name.includes('teknoloji') || name.includes('savunma')) return 'Teknoloji';
+  if (name.includes('futbol') || name.includes('spor')) return 'Hizmet';
+  return 'Sanayi';
+}
+
+// ============================================
+// ÖRNEK VERİ (GERÇEĞE YAKIN)
+// ============================================
+function loadSampleData() {
+  const sampleData = `17.09.2026	ALVES	Alves Kablo Sanayi ve Ticaret A.Ş.	Özel Durum Açıklaması	Kayyum Atanması	Şirketimize kayyum atanmıştır.	Ankara Cumhuriyet Başsavcılığı soruşturması kapsamında mahkemece şirket yönetimine TMSF yetkili yönetim/kayyum olarak atanmıştır.	1664508
+17.09.2026	TERA	Tera Portföy Yönetimi A.Ş.	Özel Durum Açıklaması	Fon Tasfiyesi	SPK kararı ile bazı fonlar tasfiye ediliyor.	SPK'nın 17.09.2026 tarihli kararı kapsamında şirketimizin kurucusu olduğu bazı yatırım fonlarında ödeme güçlüğü ve temerrüt durumu oluştuğu tespit edilmiş, bu fonlar için tasfiye süreci başlatılmıştır.	1664400
+17.09.2026	PUSULA	Pusula Portföy A.Ş.	Özel Durum Açıklaması	Temerrüt	Yatırımcı ödemelerinde temerrüt oluştu.	Bazı yatırım fonlarında ödeme güçlüğü nedeniyle temerrüt durumu oluşmuştur. Yatırımcılarımızın mağduriyetinin giderilmesi için çalışmalar sürdürülmektedir.	1664350
+17.09.2026	MCARD	Metropal Kurumsal Hizmetler A.Ş.	Özel Durum Açıklaması	Pay Geri Alım	1.2 Milyar TL geri alım programı.	Yönetim Kurulu kararı ile azami 1.200.000.000 TL tutarında pay geri alım programı başlatılmıştır.	1664447
+17.09.2026	LIDFA	Lider Faktoring A.Ş.	Özel Durum Açıklaması	Bono İtfası	50 M TL bono itfa edildi.	Sermayesine %100 iştirak ettiğimiz Denge Varlık Yönetim A.Ş. tarafından ihraç edilen 50.000.000 TL anapara tutarlı bononun itfa ödemesi gerçekleştirilmiştir.	1664484
+17.09.2026	TRALT	Türk Altın İşletmeleri A.Ş.	Özel Durum Açıklaması	Piyasa Gelişmeleri	Piyasa dalgalanması hakkında bilgilendirme.	Son dönemde Borsa İstanbul'da yaşanan dalgalanmalar ve Şirketimiz paylarında oluşan fiyat hareketleri yönetimimiz tarafından yakından takip edilmektedir.	1664447
+17.09.2026	SRVGY	Servet Gayrimenkul Yatırım Ortaklığı A.Ş.	Özel Durum Açıklaması	Yönetici Değişikliği	Yatırımcı İlişkileri Müdürü istifa etti.	Yatırımcı İlişkileri Bölümü Yöneticisi Sayın Ayşe Ata görevinden ayrılmıştır.	1664828
+17.09.2026	GLRYH	Güler Yatırım Holding A.Ş.	Özel Durum Açıklaması	SPK Kararı	SPK yaptırım kararı.	SPK'nın 17 Eylül 2026 tarihli kararı kapsamında şirket hakkında yaptırım uygulanmıştır.	1664300
+17.09.2026	SMART	Smartiks Yazılım A.Ş.	Özel Durum Açıklaması	Sözleşme	Yeni sözleşme imzalandı.	Önemli bir müşteri ile yeni sözleşme imzalanmıştır.	1664828
+17.09.2026	PAPIL	Papilon Savunma Teknoloji A.Ş.	Özel Durum Açıklaması	Yönetici Değişikliği	Genel Müdür değişikliği.	Şirket Genel Müdürü görevinden ayrılmış, yeni atama yapılmıştır.	1664999
+16.09.2026	DMSAS	Demirsaş Döküm A.Ş.	Özel Durum Açıklaması	Rekabet Kurumu	Rekabet Kurumu soruşturması.	Rekabet Kurumu tarafından şirket hakkında soruşturma başlatılmıştır.	1660532
+16.09.2026	GRNYO	Garanti Yatırım Ortaklığı A.Ş.	Özel Durum Açıklaması	Bono İtfası	NAD 2 katını aştı.	Pay başına net aktif değer 2 katını aşmıştır.	1664600
+16.09.2026	CVKMD	CVK Madencilik A.Ş.	Özel Durum Açıklaması	Pay Geri Alım	Pay alım bildirimi.	Önemli pay alım satım işlemi gerçekleştirilmiştir.	1664700
+15.09.2026	TEHOL	Tekfen Holding A.Ş.	Özel Durum Açıklaması	Sözleşme	Yeni ihale kazanıldı.	Yurtdışında önemli bir altyapı ihalesi kazanılmıştır.	1664800
+15.09.2026	UCAYM	Üçay Mühendislik A.Ş.	Özel Durum Açıklaması	Teminat	Teminat değişikliği.	Mevcut teminat yapısında değişiklik yapılmıştır.	1664900
+14.09.2026	BJKAS	Beşiktaş Futbol A.Ş.	Özel Durum Açıklaması	Sözleşme	Sponsorluk anlaşması.	Ana sponsorluk anlaşması imzalanmıştır.	1665000
+14.09.2026	SARE	Şa-Ra Enerji A.Ş.	Özel Durum Açıklaması	Borçlanma	Yeni kredi sözleşmesi.	Banka ile yeni kredi sözleşmesi imzalanmıştır.	1665100
+13.09.2026	CMENT	Çimento Sanayi A.Ş.	Özel Durum Açıklaması	Sözleşme	İhale kazanıldı.	Önemli bir altyapı ihalesi kazanılmıştır.	1665200
+12.09.2026	HEDEF	Hedef Portföy A.Ş.	Özel Durum Açıklaması	Fon Tasfiyesi	Fon tasfiye süreci.	SPK kararı ile fon tasfiye edilmiştir.	1665300
+11.09.2026	ALBMD	Albaraka Menkul A.Ş.	Özel Durum Açıklaması	Yasal Takip Portföy Satışı	NPL portföy satışı.	Tahsili gecikmiş alacak portföyü varlık yönetim şirketine devredilmiştir.	1665400
+10.09.2026	MANAS	Manas Enerji A.Ş.	Özel Durum Açıklaması	Sözleşme	Yeni yatırım.	Yeni rüzgar enerjisi santrali yatırımı onaylandı.	1665500
+09.09.2026	PEKGY	Peksoy Gayrimenkul A.Ş.	Özel Durum Açıklaması	Bono İtfası	Gayrimenkul satışı.	Portföydeki bir gayrimenkul elden çıkarılmıştır.	1665600
+08.09.2026	KTLEV	Kartallar Levha A.Ş.	Özel Durum Açıklaması	Sözleşme	Kapasite artışı.	Üretim hattı genişletme yatırımı tamamlandı.	1665700
+07.09.2026	GOODY	Goodyear Lastikleri A.Ş.	Özel Durum Açıklaması	Rekabet Kurumu	Rekabet Kurumu kararı.	Rekabet Kurumu kararı kamuya duyurulmuştur.	1665800
+05.09.2026	INFO	İnfo Yatırım A.Ş.	Özel Durum Açıklaması	Yönetici Değişikliği	Gözaltı kararı.	Şirket yöneticisi hakkında yürütülen soruşturma kapsamında gözaltı kararı uygulanmıştır.	1665900`;
+
+  rawData = parseKapData(sampleData);
+  isRealData = false;
+  updateDataSourceBanner('Örnek Veri', false);
+  updateSubjectFilter();
+  filtered = [...rawData];
+  currentPage = 1;
+  render();
+}
+
+// ============================================
+// VERİ İMPORT
+// ============================================
+function openDataModal() {
+  document.getElementById('dataModal').classList.add('active');
+}
+
+function closeDataModal() {
+  document.getElementById('dataModal').classList.remove('active');
+}
+
+function importData() {
+  const input = document.getElementById('dataInput').value;
+  if (!input.trim()) {
+    alert('Lütfen KAP verisini yapıştırın.');
+    return;
+  }
+  
+  const parsed = parseKapData(input);
+  if (parsed.length === 0) {
+    alert('Veri parse edilemedi. Lütfen formatı kontrol edin.');
+    return;
+  }
+  
+  rawData = parsed;
+  isRealData = true;
+  updateDataSourceBanner(`${parsed.length} gerçek KAP bildirimi yüklendi`, true);
+  updateSubjectFilter();
+  filtered = [...rawData];
+  currentPage = 1;
+  render();
+  closeDataModal();
+}
+
+function updateDataSourceBanner(message, isReal) {
+  const banner = document.getElementById('dataSourceBanner');
+  if (isReal) {
+    banner.className = 'data-source-banner';
+    banner.innerHTML = `<div><strong>✅ Gerçek KAP Verisi:</strong> ${message}</div><button class="btn-data" onclick="openDataModal()">🔄 Veriyi Güncelle</button>`;
+    document.getElementById('statsBar').style.display = 'flex';
+    updateStats();
+  } else {
+    banner.className = 'data-source-banner mock';
+    banner.innerHTML = `<div><strong>⚠️ ${message}:</strong> Dashboard şu anda örnek verilerle çalışıyor. Gerçek KAP verilerini yüklemek için sağdaki butonu kullanın.</div><button class="btn-data" onclick="openDataModal()">📥 Gerçek Veri Yükle</button>`;
+  }
+}
+
+function updateStats() {
+  if (rawData.length === 0) return;
+  const dates = rawData.map(n => n.tarih).sort();
+  document.getElementById('statTotal').textContent = rawData.length;
+  document.getElementById('statDateRange').textContent = `${dates[0]} - ${dates[dates.length-1]}`;
+  document.getElementById('statCompanies').textContent = new Set(rawData.map(n => n.kod)).size;
+  document.getElementById('statSubjects').textContent = new Set(rawData.map(n => n.konu)).size;
+}
+
+function updateSubjectFilter() {
+  const subjects = [...new Set(rawData.map(n => n.konu))].sort();
+  const select = document.getElementById('subjectFilter');
+  select.innerHTML = '<option value="">Tüm Konular</option>' + 
+    subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// ============================================
+// RENDER & FILTERS
+// ============================================
 function render() {
   document.getElementById('total').textContent = filtered.length;
   document.getElementById('kritik').textContent = filtered.filter(n => n.risk === 'KRITIK').length;
@@ -557,17 +517,17 @@ function render() {
       <td style="font-weight:700;color:#1e3a8a">${n.kod}</td>
       <td>${n.ad}</td>
       <td>${n.konu}</td>
-      <td style="color:#666;font-size:12px;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.ozet}</td>
+      <td style="color:#666;font-size:12px;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${n.ozet.replace(/"/g,'&quot;')}">${n.ozet}</td>
       <td><span class="badge badge-${n.risk.toLowerCase()}">${n.risk}</span></td>
       <td><button class="btn" onclick="showDetail(${n.id})">Detay →</button></td>
     </tr>
   `).join('');
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   document.getElementById('count').textContent = `${filtered.length} bildirim`;
   document.getElementById('pageInfo').textContent = `Sayfa ${currentPage} / ${totalPages}`;
   document.getElementById('prevBtn').disabled = currentPage === 1;
-  document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+  document.getElementById('nextBtn').disabled = currentPage === totalPages;
 
   updateCharts();
 }
@@ -590,8 +550,7 @@ function updateCharts() {
       scales: { y: { beginAtZero: true } },
       onClick: (e, elements) => {
         if (elements.length > 0) {
-          const index = elements[0].index;
-          document.getElementById('dateFilter').value = sortedDates[index];
+          document.getElementById('dateFilter').value = sortedDates[elements[0].index];
           applyFilters();
         }
       }
@@ -614,8 +573,7 @@ function updateCharts() {
       cutout: '60%',
       onClick: (e, elements) => {
         if (elements.length > 0) {
-          const index = elements[0].index;
-          const selectedSector = Object.keys(sectorCounts)[index];
+          const selectedSector = Object.keys(sectorCounts)[elements[0].index];
           filtered = rawData.filter(n => {
             const matchSector = n.sektor === selectedSector;
             const matchRisk = currentRisk === '' || n.risk === currentRisk;
@@ -648,9 +606,7 @@ function updateCharts() {
       cutout: '60%',
       onClick: (e, elements) => {
         if (elements.length > 0) {
-          const index = elements[0].index;
-          const selectedTopic = Object.keys(topicCounts)[index];
-          document.getElementById('subjectFilter').value = selectedTopic;
+          document.getElementById('subjectFilter').value = Object.keys(topicCounts)[elements[0].index];
           applyFilters();
         }
       }
@@ -711,7 +667,7 @@ function showDetail(id) {
       <div class="row"><span class="row-label">Hisse Kodu:</span><span class="row-value">${n.kod}</span></div>
       <div class="row"><span class="row-label">Şirket Adı:</span><span class="row-value">${n.ad}</span></div>
       <div class="row"><span class="row-label">Sektör:</span><span class="row-value">${n.sektor}</span></div>
-      <div class="row"><span class="row-label">Şirket Kategorisi:</span><span class="row-value">${n.kategori}</span></div>
+      <div class="row"><span class="row-label">Veri Kaynağı:</span><span class="row-value">${n.kaynak || 'TEMSILI'}</span></div>
     </div>
     <div class="section">
       <h4>📋 KAP Bildirimi</h4>
@@ -732,18 +688,23 @@ function showDetail(id) {
       </ul>
     </div>
   `;
-  document.getElementById('modal').classList.add('active');
+  document.getElementById('detailModal').classList.add('active');
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.remove('active');
+  document.getElementById('detailModal').classList.remove('active');
 }
 
-document.getElementById('modal').addEventListener('click', function(e) {
+document.getElementById('detailModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-render();
+document.getElementById('dataModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDataModal();
+});
+
+// Başlangıç - Örnek veri yükle
+loadSampleData();
 </script>
 </body>
 </html>
