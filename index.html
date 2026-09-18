@@ -23,7 +23,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#f
 
 /* Charts - 3 Sütun */
 .charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
-.chart-box{background:#fff;padding:12px;border-radius:6px;border:1px solid #e5e7eb}
+.chart-box{background:#fff;padding:12px;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer;transition:all 0.2s}
+.chart-box:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 .chart-box h4{font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .chart-container{position:relative;height:200px;width:100%}
 
@@ -49,6 +50,14 @@ table{width:100%;border-collapse:collapse}
 th{background:#f9fafb;padding:10px;text-align:left;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
 td{padding:10px;border-bottom:1px solid #f3f4f6;font-size:13px}
 tr:hover{background:#f9fafb}
+
+/* Pagination */
+.pagination{padding:12px;border-top:1px solid #e5e7eb;background:#f9fafb;display:flex;justify-content:space-between;align-items:center}
+.pagination-info{font-size:12px;color:#6b7280}
+.pagination-buttons{display:flex;gap:8px}
+.btn-page{padding:6px 12px;border:1px solid #d1d5db;background:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-page:hover:not(:disabled){background:#f3f4f6}
+.btn-page:disabled{opacity:0.5;cursor:not-allowed}
 
 /* Badges & Buttons */
 .badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600}
@@ -85,7 +94,6 @@ tr:hover{background:#f9fafb}
 }
 @media(max-width: 768px) {
   .kpi-row { grid-template-columns: repeat(3, 1fr); }
-  .kpi:nth-child(4), .kpi:nth-child(5) { grid-column: span 1; } /* Mobilde alt satıra geçsin */
   .charts-grid { grid-template-columns: 1fr; }
   .filter-grid { grid-template-columns: 1fr 1fr; }
   table { font-size: 12px; }
@@ -114,15 +122,15 @@ tr:hover{background:#f9fafb}
   <!-- Charts -->
   <div class="charts-grid">
     <div class="chart-box">
-      <h4>📈 Günlük İlan Hacmi</h4>
+      <h4>📈 Günlük İlan Hacmi <span style="font-size:10px;color:#9ca3af">(Tıklayarak filtrele)</span></h4>
       <div class="chart-container"><canvas id="trendChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h4>🏭 Sektörel Dağılım</h4>
+      <h4>🏭 Sektörel Dağılım <span style="font-size:10px;color:#9ca3af">(Tıklayarak filtrele)</span></h4>
       <div class="chart-container"><canvas id="sectorChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h4>🍩 Konu Başlığı Dağılımı</h4>
+      <h4>🍩 Konu Başlığı Dağılımı <span style="font-size:10px;color:#9ca3af">(Tıklayarak filtrele)</span></h4>
       <div class="chart-container"><canvas id="topicChart"></canvas></div>
     </div>
   </div>
@@ -142,6 +150,8 @@ tr:hover{background:#f9fafb}
         <label>📌 Konu Başlığı</label>
         <select id="subjectFilter" onchange="applyFilters()">
           <option value="">Tüm Konular</option>
+          <option value="Yasal Takip Portföy Satışı">Yasal Takip Portföy Satışı (Banka → VYŞ)</option>
+          <option value="Yasal Takip Portföy Alımı">Yasal Takip Portföy Alımı (VYŞ → Banka)</option>
           <option value="Kayyum Atanması">Kayyum Atanması</option>
           <option value="Temerrüt">Temerrüt / Ödeme Güçlüğü</option>
           <option value="Fon Tasfiyesi">Fon Tasfiyesi</option>
@@ -187,9 +197,13 @@ tr:hover{background:#f9fafb}
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <div style="padding: 8px 12px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280; text-align: center;">
-      * Performans optimizasyonu gereği tabloda eşleşen ilk 100 kayıt gösterilmektedir. Spesifik kayıtlar için filtreleri daraltınız.
-    </div.>
+    <div class="pagination">
+      <div class="pagination-info" id="pageInfo">Sayfa 1 / 1</div>
+      <div class="pagination-buttons">
+        <button class="btn-page" onclick="prevPage()" id="prevBtn">← Önceki</button>
+        <button class="btn-page" onclick="nextPage()" id="nextBtn">Sonraki →</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -206,7 +220,7 @@ tr:hover{background:#f9fafb}
 </div>
 
 <script>
-// --- GERÇEKÇİ VERİ ÜRETİCİ (DATA GENERATOR) ---
+// --- VERİ ÜRETİCİ (DATA GENERATOR) ---
 const sectors = ['Finans', 'Sanayi', 'İnşaat', 'Enerji', 'Teknoloji', 'Hizmet', 'Madencilik'];
 const companies = [
   {kod:'ALVES',ad:'Alves Kablo San. A.Ş.'}, {kod:'TERA',ad:'Tera Portföy Yönetimi A.Ş.'},
@@ -226,15 +240,17 @@ const companies = [
 ];
 
 const subjects = [
-  { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.35 },
-  { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.20 },
-  { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.15 },
+  { konu: 'Piyasa Gelişmeleri', risk: 'NOTR', weight: 0.30 },
+  { konu: 'Sözleşme / İhale', risk: 'POZITIF', weight: 0.18 },
+  { konu: 'Bono İtfası', risk: 'POZITIF', weight: 0.12 },
   { konu: 'Yönetici Değişikliği', risk: 'NOTR', weight: 0.10 },
   { konu: 'Pay Geri Alım', risk: 'NEGATIF', weight: 0.08 },
   { konu: 'Rekabet Kurumu', risk: 'NEGATIF', weight: 0.05 },
-  { konu: 'Temerrüt', risk: 'KRITIK', weight: 0.03 },
-  { konu: 'Fon Tasfiyesi', risk: 'KRITIK', weight: 0.02 },
-  { konu: 'Kayyum Atanması', risk: 'KRITIK', weight: 0.02 }
+  { konu: 'Yasal Takip Portföy Satışı', risk: 'POZITIF', weight: 0.07 }, // Banka → VYŞ
+  { konu: 'Yasal Takip Portföy Alımı', risk: 'POZITIF', weight: 0.05 },  // VYŞ → Banka
+  { konu: 'Temerrüt', risk: 'KRITIK', weight: 0.02 },
+  { konu: 'Fon Tasfiyesi', risk: 'KRITIK', weight: 0.015 },
+  { konu: 'Kayyum Atanması', risk: 'KRITIK', weight: 0.015 }
 ];
 
 function getRandomSubject() {
@@ -255,8 +271,8 @@ function generateData() {
   
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateStr = d.toISOString().split('T')[0];
-    // Her gün için 150 ile 200 arasında rastgele bildirim üret
-    const dailyCount = Math.floor(Math.random() * (200 - 150 + 1)) + 150;
+    // Her gün için 200 ile 300 arasında rastgele bildirim üret
+    const dailyCount = Math.floor(Math.random() * (300 - 200 + 1)) + 200;
     
     for (let i = 0; i < dailyCount; i++) {
       const comp = companies[Math.floor(Math.random() * companies.length)];
@@ -268,13 +284,22 @@ function generateData() {
       else if (subj.risk === 'NEGATIF') skor = 0.60 + (Math.random() * 0.25);
       else if (subj.risk === 'POZITIF') skor = 0.10 + (Math.random() * 0.20);
 
+      let ozet = '';
+      if (subj.konu === 'Yasal Takip Portföy Satışı') {
+        ozet = `Banka, yasal takip portföyünü VYŞ'ye sattı. Toplam ${Math.floor(Math.random() * 500 + 100)} M TL tutarında alacak devri.`;
+      } else if (subj.konu === 'Yasal Takip Portföy Alımı') {
+        ozet = `VYŞ, bankadan yasal takip portföyü satın aldı. Portföy değeri ${Math.floor(Math.random() * 300 + 50)} M TL.`;
+      } else {
+        ozet = `${subj.konu} hakkında yapılan açıklama.`;
+      }
+
       data.push({
         id: idCounter++,
         tarih: dateStr,
         kod: comp.kod,
         ad: comp.ad,
         konu: subj.konu,
-        ozet: `${subj.konu} hakkında yapılan açıklama.`,
+        ozet: ozet,
         sektor: sect,
         risk: subj.risk,
         skor: parseFloat(skor.toFixed(2)),
@@ -283,30 +308,33 @@ function generateData() {
       });
     }
   }
-  // Veriyi tarihe göre tersten sırala (en yeni en üstte)
   return data.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
 }
 
 const rawData = generateData();
 let filtered = [...rawData];
 let currentRisk = '';
+let currentPage = 1;
+const itemsPerPage = 50;
 let trendChartInstance = null;
 let sectorChartInstance = null;
 let topicChartInstance = null;
 
 function render() {
-  // 1. KPI Güncelle (Tüm filtrelenmiş veri üzerinden)
+  // 1. KPI Güncelle
   document.getElementById('total').textContent = filtered.length;
   document.getElementById('kritik').textContent = filtered.filter(n => n.risk === 'KRITIK').length;
   document.getElementById('negatif').textContent = filtered.filter(n => n.risk === 'NEGATIF').length;
   document.getElementById('notr').textContent = filtered.filter(n => n.risk === 'NOTR').length;
   document.getElementById('pozitif').textContent = filtered.filter(n => n.risk === 'POZITIF').length;
-  document.getElementById('count').textContent = `Toplam ${filtered.length} bildirim bulundu (Tabloda ilk 100'ü listelenmiştir)`;
 
-  // 2. Tablo Render (Sadece ilk 100 kayıt - Performans için)
+  // 2. Tablo Render (Sayfalama ile)
   const tbody = document.getElementById('tbody');
-  const displayData = filtered.slice(0, 100);
-  tbody.innerHTML = displayData.map(n => `
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const pageData = filtered.slice(start, end);
+  
+  tbody.innerHTML = pageData.map(n => `
     <tr>
       <td style="font-size:12px;color:#666">${n.tarih.split('-').reverse().join('.')}</td>
       <td style="font-weight:700;color:#1e3a8a">${n.kod}</td>
@@ -318,7 +346,13 @@ function render() {
     </tr>
   `).join('');
 
-  // 3. Grafikleri Güncelle
+  // 3. Pagination Bilgisi
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  document.getElementById('pageInfo').textContent = `Sayfa ${currentPage} / ${totalPages} (Toplam ${filtered.length} bildirim)`;
+  document.getElementById('prevBtn').disabled = currentPage === 1;
+  document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+  // 4. Grafikleri Güncelle
   updateCharts();
 }
 
@@ -335,7 +369,20 @@ function updateCharts() {
       labels: sortedDates.map(d => d.split('-').reverse().join('.')),
       datasets: [{ label: 'Günlük ÖDA', data: sortedDates.map(d => dateCounts[d]), backgroundColor: '#3b82f6', borderRadius: 4, barThickness: 12 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } },
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const selectedDate = sortedDates[index];
+          document.getElementById('dateFilter').value = selectedDate;
+          applyFilters();
+        }
+      }
+    }
   });
 
   // B. Sektörel Dağılım
@@ -349,7 +396,26 @@ function updateCharts() {
       labels: Object.keys(sectorCounts),
       datasets: [{ data: Object.values(sectorCounts), backgroundColor: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#6b7280'], borderWidth: 0 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } }, cutout: '60%' }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } },
+      cutout: '60%',
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const selectedSector = Object.keys(sectorCounts)[index];
+          // Sektör filtresi için özel bir alan yok, bu yüzden manuel filtreleme yapıyoruz
+          filtered = rawData.filter(n => n.sektor === selectedSector && 
+            (currentRisk === '' || n.risk === currentRisk) &&
+            (document.getElementById('stockFilter').value === '' || n.kod.toLowerCase().includes(document.getElementById('stockFilter').value.toLowerCase()) || n.ad.toLowerCase().includes(document.getElementById('stockFilter').value.toLowerCase())) &&
+            (document.getElementById('subjectFilter').value === '' || n.konu === document.getElementById('subjectFilter').value)
+          );
+          currentPage = 1;
+          render();
+        }
+      }
+    }
   });
 
   // C. Konu Dağılımı
@@ -361,9 +427,22 @@ function updateCharts() {
     type: 'doughnut',
     data: {
       labels: Object.keys(topicCounts),
-      datasets: [{ data: Object.values(topicCounts), backgroundColor: ['#64748b', '#0ea5e9', '#22c55e', '#eab308', '#f43f5e', '#a855f7'], borderWidth: 0 }]
+      datasets: [{ data: Object.values(topicCounts), backgroundColor: ['#64748b', '#0ea5e9', '#22c55e', '#eab308', '#f43f5e', '#a855f7', '#14b8a6', '#f97316', '#84cc16', '#06b6d4', '#e11d48'], borderWidth: 0 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } }, cutout: '60%' }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } },
+      cutout: '60%',
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const selectedTopic = Object.keys(topicCounts)[index];
+          document.getElementById('subjectFilter').value = selectedTopic;
+          applyFilters();
+        }
+      }
+    }
   });
 }
 
@@ -386,6 +465,7 @@ function applyFilters() {
     const matchSubject = subjectVal === '' || n.konu === subjectVal;
     return matchRisk && matchDate && matchStock && matchSubject;
   });
+  currentPage = 1;
   render();
 }
 
@@ -394,6 +474,21 @@ function resetFilters() {
   document.getElementById('stockFilter').value = '';
   document.getElementById('subjectFilter').value = '';
   filterRisk('');
+}
+
+function nextPage() {
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    render();
+  }
+}
+
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    render();
+  }
 }
 
 function showDetail(id) {
